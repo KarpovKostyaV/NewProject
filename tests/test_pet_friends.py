@@ -1,5 +1,6 @@
+import pytest
 from api import PetFriends
-from settings import valid_email, valid_password
+from settings import valid_email, valid_password, invalid_password, invalid_email
 import os
 
 pf = PetFriends()
@@ -29,7 +30,7 @@ def test_get_all_pets_with_valid_key(filter=''):
     assert len(result['pets']) > 0
 
 
-def test_add_new_pet_with_valid_data(name='Барбоскин', animal_type='двортерьер',
+def test_add_new_pet_with_valid_data(name='Барб12оскин', animal_type='двортерьер',
                                      age='4', pet_photo='images/cat1.jpg'):
     """Проверяем что можно добавить питомца с корректными данными"""
 
@@ -81,6 +82,40 @@ def test_successful_update_self_pet_info(name='Мурзик', animal_type='Ко�
     # Еслди список не пустой, то пробуем обновить его имя, тип и возраст
     if len(my_pets['pets']) > 0:
         status, result = pf.update_pet_info(auth_key, my_pets['pets'][0]['id'], name, animal_type, age)
+
+        # Проверяем что статус ответа = 200 и имя питомца соответствует заданному
+        assert status == 200
+        assert result['name'] == name
+    else:
+        # если спиок питомцев пустой, то выкидываем исключение с текстом об отсутствии своих питомцев
+        raise Exception("There is no my pets")
+
+        """Мои тесты"""
+
+
+def test_get_api_key_for_valid_user(email=invalid_password, password=valid_password):
+    """ Проверяем что запрос api ключа возвращает статус 403 при не верным email"""
+
+    # Отправляем запрос и сохраняем полученный ответ с кодом статуса в status, а текст ответа в result
+    status, result = pf.get_api_key(email, password)
+
+    # Сверяем полученные данные с нашими ожиданиями
+    assert status == 403
+
+
+def test_set_pet_photo(pet_photo='images/P1040103.jpg'):
+    """Проверяем что можно добавить питомца с корректными данными"""
+
+    # Получаем полный путь изображения питомца и сохраняем в переменную pet_photo
+    pet_photo = os.path.join(os.path.dirname(__file__), pet_photo)
+
+    # Запрашиваем ключ api и сохраняем в переменую auth_key
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, my_pets = pf.get_list_of_pets(auth_key, "my_pets")
+
+    # Еслди список не пустой, то пробуем обновить его имя, тип и возраст
+    if len(my_pets['pets']) > 0:
+        status, result = pf.set_pet_photo(auth_key, my_pets['pets'][0]['id'], pet_photo)
 
         # Проверяем что статус ответа = 200 и имя питомца соответствует заданному
         assert status == 200
