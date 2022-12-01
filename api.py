@@ -135,10 +135,11 @@ class PetFriends:
         """Метод отправляет запрос на сервер о обновлении фото питомуа по указанному ID и
         возвращает статус запроса и result в формате JSON с обновлённыи данными питомца"""
 
+        data = MultipartEncoder(
+            fields={
+                'pet_photo': (pet_photo, open(pet_photo, 'rb'), 'image/jpeg')
+            })
         headers = {'auth_key': auth_key['key']}
-        data = {
-            'pet_photo': (pet_photo, open(pet_photo, 'rb'), 'image/jpeg')
-        }
 
         res = requests.put(self.base_url + 'api/pets/set_photo/' + pet_id, headers=headers, data=data)
         status = res.status_code
@@ -147,4 +148,5 @@ class PetFriends:
             result = res.json()
         except json.decoder.JSONDecodeError:
             result = res.text
+        print(result)
         return status, result
